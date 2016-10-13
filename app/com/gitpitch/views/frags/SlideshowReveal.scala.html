@@ -13,6 +13,11 @@
             shuffle: @ssm.fetchShuffle(),
             @if(ssm.mathEnabled()) {
                 math: {
+                    "HTML-CSS": {
+                        preferredFont: "TeX",
+                        availableFonts: ["STIX","TeX"],
+                        webFont: null
+                    },
                     @if(offline) {
                     mathjax: '@deps.revealjs(offline)/plugin/math/MathJax.js',
                     } else {
