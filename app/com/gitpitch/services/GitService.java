@@ -323,6 +323,17 @@ public class GitService {
 
                         if (downStatus == STATUS_OK) {
 
+                            /*
+                                THIS IS WHERE I NEED TO STEP OVER THE MD
+                                FILE LINE-BY-LINE AND WHEN AN `INCLUDE` IS
+                                FOUND I NEED TO DOWNLOAD AND REPLACE.
+
+                                THIS MEANS READING, UPDATING AND WRITING BACK
+                                TO DISK...
+                            */
+                            boolean composed = grsService.download(pp,
+                                    PitchParams.PITCHME_MD, pp.MD());
+                            
                             String ssmKey = SlideshowModel.genKey(pp);
                             Optional<SlideshowModel> ssmo =
                                     Optional.ofNullable(pitchCache.get(ssmKey));

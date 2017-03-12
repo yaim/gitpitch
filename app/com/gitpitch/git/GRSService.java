@@ -90,6 +90,18 @@ public abstract class GRSService {
     }
 
     /*
+     * Handle composed content in slideshow presentation.
+     *
+     * A presentation may be composed of one or more Markdown
+     * fragments, where each fragment lives in its own file.
+     * This method inlines these fragments within the main
+     * presentation content file, PITCHME.md.
+     */
+    public boolean compose() {
+    }
+
+
+    /*
      * Return model representing Git repository meta-data.
      */
     public abstract GitRepoModel model(PitchParams pp, JsonNode json);
