@@ -34,6 +34,8 @@ import javax.inject.*;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -77,40 +79,41 @@ public class ComposableService {
 
             String composed = null;
             try (Stream<String> stream = Files.lines(mdPath)) {
+
                 composed = stream.map(md -> {
 
-                if(md.startsWith(HSLIDE_INCLUDE)) {
+                    if(md.startsWith(HSLIDE_INCLUDE)) {
 
-                    String included = fetchInclude(pp,
-                                                   md,
-                                                   HSLIDE_INCLUDE,
-                                                   grsService,
-                                                   grs.getHeaders());
-                    if(included != null) {
-                        return MarkdownModel.HSLIDE_DELIM_DEFAULT +
-                                NEWLINES + included;
-                    } else {
-                        return notFound(MarkdownModel.HSLIDE_DELIM_DEFAULT,
-                                includePath(md, HSLIDE_INCLUDE));
-                    }
-                } else
-                if(md.startsWith(VSLIDE_INCLUDE)) {
+                        String included = handleInclude(pp,
+                                                        md,
+                                                        HSLIDE_INCLUDE,
+                                                        grsService,
+                                                        grs.getHeaders());
+                        if(included != null) {
+                            return MarkdownModel.HSLIDE_DELIM_DEFAULT +
+                                    NEWLINES + included;
+                        } else {
+                            return notFound(MarkdownModel.HSLIDE_DELIM_DEFAULT,
+                                    includePath(md, HSLIDE_INCLUDE));
+                        }
+                    } else
+                    if(md.startsWith(VSLIDE_INCLUDE)) {
 
-                    String included = fetchInclude(pp,
-                                                   md,
-                                                   VSLIDE_INCLUDE,
-                                                   grsService,
-                                                   grs.getHeaders());
-                    if(included != null) {
-                        return MarkdownModel.VSLIDE_DELIM_DEFAULT +
-                                NEWLINES + included;
+                        String included = handleInclude(pp,
+                                                        md,
+                                                        VSLIDE_INCLUDE,
+                                                        grsService,
+                                                        grs.getHeaders());
+                        if(included != null) {
+                            return MarkdownModel.VSLIDE_DELIM_DEFAULT +
+                                    NEWLINES + included;
+                        } else {
+                            return notFound(MarkdownModel.VSLIDE_DELIM_DEFAULT,
+                                    includePath(md, VSLIDE_INCLUDE));
+                        }
                     } else {
-                        return notFound(MarkdownModel.VSLIDE_DELIM_DEFAULT,
-                                includePath(md, VSLIDE_INCLUDE));
+                        return md;
                     }
-                } else {
-                    return md;
-                }
                 }).collect(Collectors.joining("\n"));
 
                 boolean overwritten = overwrite(pp, mdPath, composed);
@@ -126,8 +129,26 @@ public class ComposableService {
         }
     }
 
+    private String handleInclude(PitchParams pp,
+                                 String md,
+                                 String includeDelim,
+                                 GRSService grsService,
+                                 Map<String,String> headers) {
+
+        String included = null;
+        String includePath = includePath(md, includeDelim);
+
+        if(FORBIDDEN.contains(includePath)) {
+            included = notPermitted(includeDelim, includePath);
+        } else {
+            included = fetchInclude(pp, includePath,
+                    includeDelim, grsService, headers);
+        }
+        return included;
+    }
+
     private String fetchInclude(PitchParams pp,
-                                String md,
+                                String includePath,
                                 String includeDelim,
                                 GRSService grsService,
                                 Map<String,String> headers) {
@@ -136,7 +157,6 @@ public class ComposableService {
 
         try {
 
-            String includePath = includePath(md, includeDelim);
             if(!isAbsolute(includePath))
                 includePath = grsService.raw(pp, includePath, true);
 
@@ -150,7 +170,11 @@ public class ComposableService {
     }
 
     private String includePath(String md, String includeDelim) {
-        return md.substring(includeDelim.length());
+        try {
+            return md.substring(includeDelim.length());
+        } catch(Exception ipex) {
+            return md;
+        }
     }
 
     private boolean overwrite(PitchParams pp,
@@ -178,6 +202,16 @@ public class ComposableService {
         return buf.toString();
     }
 
+    private String notPermitted(String delim, String path) {
+        StringBuffer buf = new StringBuffer(NEWLINES);
+        buf.append("### GitPitch ?Include")
+           .append(NEWLINES).append(".").append(NEWLINES)
+           .append(path)
+           .append(NEWLINES).append(".").append(NEWLINES)
+           .append("Path Not Permitted");
+        return buf.toString();
+    }
+
     private boolean isAbsolute(String path) {
         return path.startsWith(HTTP);
     }
@@ -188,4 +222,6 @@ public class ComposableService {
         MarkdownModel.VSLIDE_DELIM_DEFAULT + "?include=";
     private final String HTTP = "http";
     private final String NEWLINES = "\n\n";
+    private final List<String> FORBIDDEN =
+        Arrays.asList(PitchParams.PITCHME_MD, "./PITCHME.md");
 }
