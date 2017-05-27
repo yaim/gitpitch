@@ -78,8 +78,6 @@ public class ShortcutsService {
      */
     public String expandCodeFragment(String md) {
 
-        log.debug("expandCodeFragment: starting {}", md);
-
         try {
             String codeFragRange = null;
             String codeFragNote = null;
@@ -110,7 +108,6 @@ public class ShortcutsService {
 
         } catch(Exception cfex) {
         } finally {
-            log.debug("expandCodeFragment: returning {}", md);
             return md;
         }
     }
