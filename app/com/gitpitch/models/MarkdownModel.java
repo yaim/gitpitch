@@ -253,8 +253,10 @@ public class MarkdownModel implements Markdown {
                 String absTagLink = gitRawBase + tagLink;
                 return md.replace(tagLink, absTagLink);
             }
-        } else if(shortcutsService.fragmentFound(md)) {
-            return shortcutsService.expandFragment(md);
+        } else if(shortcutsService.listFragmentFound(md)) {
+            return shortcutsService.expandListFragment(md);
+        } else if(shortcutsService.codeFragmentFound(md)) {
+            return shortcutsService.expandCodeFragment(md);
         } else {
 
             /*
@@ -677,8 +679,12 @@ public class MarkdownModel implements Markdown {
     public static final String MD_CLOSER = "\" -->";
     public static final String MD_SPACER = "\n";
     public static final String DATA_IMAGE_ATTR = "data-background-image=";
-    public static final String MD_FRAG_OPEN = "- ";
-    public static final String MD_FRAG_CLOSE = "|";
+    public static final String MD_LIST_FRAG_OPEN = "- ";
+    public static final String MD_LIST_FRAG_CLOSE = "|";
+    public static final String MD_CODE_FRAG_OPEN = "@[";
+    public static final String MD_CODE_FRAG_CLOSE = "]";
+    public static final String MD_CODE_FRAG_NOTE_OPEN = "(";
+    public static final String MD_CODE_FRAG_NOTE_CLOSE = ")";
 
     private static final String MD_HSLIDE_IMAGE = "?image=";
     private static final String MD_VSLIDE_IMAGE = "?image=";
