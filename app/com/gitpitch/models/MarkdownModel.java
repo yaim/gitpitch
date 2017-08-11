@@ -27,6 +27,7 @@ import com.gitpitch.models.SlideshowModel;
 import com.gitpitch.utils.*;
 import com.gitpitch.services.ImageService;
 import com.gitpitch.services.VideoService;
+import com.gitpitch.services.IframeService;
 import com.gitpitch.services.GISTService;
 import com.gitpitch.services.CodeService;
 import com.gitpitch.services.ShortcutsService;
@@ -53,6 +54,7 @@ public class MarkdownModel implements Markdown {
 
     private final ImageService imageService;
     private final VideoService videoService;
+    private final IframeService iframeService;
     private final GISTService  gistService;
     private final CodeService  codeService;
     private final ShortcutsService shortcutsService;
@@ -64,6 +66,7 @@ public class MarkdownModel implements Markdown {
     @Inject
     public MarkdownModel(ImageService imageService,
                          VideoService videoService,
+                         IframeService iframeService,
                          GISTService  gistService,
                          CodeService  codeService,
                          ShortcutsService  shortcutsService,
@@ -71,6 +74,7 @@ public class MarkdownModel implements Markdown {
 
         this.imageService = imageService;
         this.videoService = videoService;
+        this.iframeService = iframeService;
         this.gistService  = gistService;
         this.codeService  = codeService;
         this.shortcutsService = shortcutsService;
@@ -177,6 +181,22 @@ public class MarkdownModel implements Markdown {
                         .append(imageService.buildBackground(pp,
                                 imageBgUrl, bgSize))
                         .toString();
+
+            } else if(iframeDelimFound(md)) {
+
+                /*
+                 * Inject slide specific image background:
+                 *
+                 * <!-- .slide: data-background-interactive
+                 *      data-background-image="iframeUrl" -->
+                 */
+
+                String iframeBgUrl =
+                    iframeService.extractBgUrl(md, gitRawBase, this);
+
+                return new StringBuffer(delimiter(md))
+                    .append(iframeService.buildBackground(pp, iframeBgUrl))
+                    .toString();
 
             } else if (gistDelimFound(md)) {
                 return gistService.build(md, pp, yOpts, this);
@@ -402,6 +422,10 @@ public class MarkdownModel implements Markdown {
         return md.startsWith(horizVideoDelim()) || md.startsWith(vertVideoDelim());
     }
 
+    private boolean iframeDelimFound(String md) {
+        return md.startsWith(horizIframeDelim()) || md.startsWith(vertIframeDelim());
+    }
+
     private boolean gistDelimFound(String md) {
         return md.startsWith(horizGISTDelim()) || md.startsWith(vertGISTDelim());
     }
@@ -583,6 +607,10 @@ public class MarkdownModel implements Markdown {
         return isHorizontal(md) ? horizVideoDelim() : vertVideoDelim();
     }
 
+    public String extractIframeDelim(String md) {
+        return isHorizontal(md) ? horizIframeDelim() : vertIframeDelim();
+    }
+
     public String extractGISTDelim(String md) {
         return isHorizontal(md) ? horizGISTDelim() : vertGISTDelim();
     }
@@ -631,6 +659,14 @@ public class MarkdownModel implements Markdown {
 
     public String vertVideoDelim() {
         return vertDelim() + MD_VSLIDE_VIDEO;
+    }
+
+    public String horizIframeDelim() {
+        return horizDelim() + MD_HSLIDE_IFRAME;
+    }
+
+    public String vertIframeDelim() {
+        return vertDelim() + MD_VSLIDE_IFRAME;
     }
 
     public String horizGISTDelim() {
@@ -692,11 +728,14 @@ public class MarkdownModel implements Markdown {
             "<!-- .slide: data-background-video=\"";
     public static final String MD_IFRAME_OPEN =
             "<!-- .slide: data-background-iframe=\"";
+    public static final String MD_IFRAME_INTERACTIVE =
+        "\" data-background-interactive --->";
     public static final String MD_IMAGE_SIZE =
             "\" data-background-size=\"";
     public static final String MD_CLOSER = "\" -->";
     public static final String MD_SPACER = "\n";
     public static final String DATA_IMAGE_ATTR = "data-background-image=";
+    public static final String DATA_IFRAME_ATTR = "data-background-iframe=";
     public static final String MD_LIST_FRAG_OPEN = "- ";
     public static final String MD_LIST_FRAG_CLOSE = "|";
     public static final String MD_CODE_FRAG_OPEN = "@[";
@@ -710,6 +749,8 @@ public class MarkdownModel implements Markdown {
     private static final String MD_VSLIDE_IMAGE = "?image=";
     private static final String MD_HSLIDE_VIDEO = "?video=";
     private static final String MD_VSLIDE_VIDEO = "?video=";
+    private static final String MD_HSLIDE_IFRAME = "?iframe=";
+    private static final String MD_VSLIDE_IFRAME = "?iframe=";
     private static final String MD_HSLIDE_GIST = "?gist=";
     private static final String MD_VSLIDE_GIST = "?gist=";
     private static final String MD_HSLIDE_CODE = "?code=";

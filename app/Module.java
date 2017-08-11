@@ -50,6 +50,7 @@ public class Module extends AbstractModule {
         bind(ShellService.class).asEagerSingleton();
         bind(ImageService.class).asEagerSingleton();
         bind(VideoService.class).asEagerSingleton();
+        bind(IframeService.class).asEagerSingleton();
         bind(GISTService.class).asEagerSingleton();
         bind(CodeService.class).asEagerSingleton();
         bind(ShortcutsService.class).asEagerSingleton();
